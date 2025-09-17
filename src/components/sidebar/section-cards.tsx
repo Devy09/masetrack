@@ -10,94 +10,100 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-export function SectionCards() {
+type Metrics = {
+  users: { total: number }
+  submissions: {
+    total: number
+    pending: number
+    byTitle: { enrollment: number; grades: number }
+    bySemester: { first: number; second: number }
+  }
+}
+
+export function SectionCards({ metrics }: { metrics?: Metrics }) {
   return (
     <div className="grid grid-cols-1 gap-4 px-4 lg:grid-cols-2 xl:grid-cols-4 lg:px-6">
       <Card className="w-full bg-gradient-to-t from-teal-500 to-white dark:to-zinc-900">
         <CardHeader>
-          <CardDescription>Total Revenue</CardDescription>
+          <CardDescription>Total Users</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums">
-            $1,250.00
+            {metrics?.users.total ?? 0}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
               <IconTrendingUp className="mr-1" />
-              +12.5%
+              +0%
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex items-center gap-2 font-medium">
-            Trending up this month <IconTrendingUp className="size-4" />
+            Users in system <IconTrendingUp className="size-4" />
           </div>
-          <div className="text-muted-foreground">
-            Visitors for the last 6 months
-          </div>
+          <div className="text-muted-foreground">Current total users</div>
         </CardFooter>
       </Card>
 
       <Card className="w-full bg-gradient-to-t from-teal-500 to-white dark:to-zinc-900">
         <CardHeader>
-          <CardDescription>New Customers</CardDescription>
+          <CardDescription>Total Submissions</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums">
-            1,234
+            {metrics?.submissions.total ?? 0}
+          </CardTitle>
+          <CardAction>
+            <Badge variant="outline">
+              <IconTrendingUp className="mr-1" />
+              +0%
+            </Badge>
+          </CardAction>
+        </CardHeader>
+        <CardFooter className="flex-col items-start gap-1.5 text-sm">
+          <div className="line-clamp-1 flex items-center gap-2 font-medium">
+            All time submissions <IconTrendingUp className="size-4" />
+          </div>
+          <div className="text-muted-foreground">Across all users</div>
+        </CardFooter>
+      </Card>
+
+      <Card className="w-full bg-gradient-to-t from-teal-500 to-white dark:to-zinc-900">
+        <CardHeader>
+          <CardDescription>Pending Submissions</CardDescription>
+          <CardTitle className="text-2xl font-semibold tabular-nums">
+            {metrics?.submissions.pending ?? 0}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
               <IconTrendingDown className="mr-1" />
-              -20%
+              0 pending
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex items-center gap-2 font-medium">
-            Trending down this month <IconTrendingDown className="size-4" />
+            Awaiting review <IconTrendingDown className="size-4" />
           </div>
-          <div className="text-muted-foreground">
-            Customers for the last 6 months
-          </div>
+          <div className="text-muted-foreground">Needs action</div>
         </CardFooter>
       </Card>
 
       <Card className="w-full bg-gradient-to-t from-teal-500 to-white dark:to-zinc-900">
         <CardHeader>
-          <CardDescription>Active Accounts</CardDescription>
+          <CardDescription>By Title</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums">
-            45,678
+            {metrics ? `${metrics.submissions.byTitle.enrollment}/${metrics.submissions.byTitle.grades}` : '0/0'}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
               <IconTrendingUp className="mr-1" />
-              +12.5%
+              ENR/GRD
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex items-center gap-2 font-medium">
-            Strong user retention <IconTrendingUp className="size-4" />
+            Enrollment vs Grades <IconTrendingUp className="size-4" />
           </div>
-          <div className="text-muted-foreground">Engagement exceed targets</div>
-        </CardFooter>
-      </Card>
-
-      <Card className="w-full bg-gradient-to-t from-teal-500 to-white dark:to-zinc-900">
-        <CardHeader>
-          <CardDescription>Growth Rate</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums">
-            4.5%
-          </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <IconTrendingUp className="mr-1" />
-              +4.5%
-            </Badge>
-          </CardAction>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex items-center gap-2 font-medium">
-            Steady performance increase <IconTrendingUp className="size-4" />
-          </div>
-          <div className="text-muted-foreground">Meets growth projections</div>
+          <div className="text-muted-foreground">Submission split</div>
         </CardFooter>
       </Card>
     </div>
