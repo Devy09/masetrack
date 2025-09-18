@@ -26,7 +26,6 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
-// Removed legacy Certificate model. Use CertificateSubmission + CertificateFile.
 
 model CertificateSubmission {
   id          Int               @id @default(autoincrement())
@@ -53,6 +52,7 @@ model CertificateFile {
   createdAt     DateTime               @default(now())
 }
 
+// ENUMS 
 enum CertificateTitle {
   ENROLLMENT
   GRADES
