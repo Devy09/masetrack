@@ -3,6 +3,7 @@
 import * as React from "react"
 import {
   IconCalendar,
+  IconChartBar,
   IconDashboard,
   IconFolder,
   IconHelp,
@@ -36,15 +37,17 @@ type MenuItem = {
 const menuItems: { [key: string]: MenuItem[] } = {
   // Common items for all roles
   common: [
-    {
-      title: "Dashboard",
-      url: "/dashboard/overview",
-      icon: IconDashboard,
-    },
+    
   ],
   
   // Admin specific items
   admin: [
+    {
+      title: "Dashboard",
+      url: "/dashboard/overview",
+      icon: IconDashboard,
+      roles: ["admin", "personnel"],
+    },
     {
       title: "User Management",
       url: "/dashboard/user-management",
@@ -63,6 +66,18 @@ const menuItems: { [key: string]: MenuItem[] } = {
       icon: IconCalendar,
       roles: ["admin", "personnel"],
     },
+    {
+      title: "Dashboard",
+      url: "/dashboard/user-overview",
+      icon: IconDashboard,
+      roles: ["user"],
+    },
+    {
+      title: "Polls",
+      url: "/dashboard/polls",
+      icon: IconChartBar,
+      roles: ["admin", "personnel", "user"],
+    },
   ],
   
   // Personnel specific items
@@ -72,6 +87,16 @@ const menuItems: { [key: string]: MenuItem[] } = {
       url: "/dashboard/reports",
       icon: IconReport,
       roles: ["personnel", "admin"],
+    },
+  ],
+
+  // User specific items
+  user: [
+    {
+      title: "Dashboard",
+      url: "/dashboard/user-overview",
+      icon: IconDashboard,
+      roles: ["user"],
     },
   ],
   

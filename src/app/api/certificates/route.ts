@@ -106,6 +106,14 @@ export async function GET(request: NextRequest) {
       },
       include: {
         files: true,
+        remarks: {
+          include: {
+            author: {
+              select: { id: true, name: true, email: true }
+            }
+          },
+          orderBy: { createdAt: 'desc' }
+        },
         user: {
           select: {
             id: true,
@@ -137,6 +145,8 @@ export async function GET(request: NextRequest) {
       updatedAt: s.updatedAt,
       user: s.user,
       files: s.files,
+      remarks: (s as any).remarks || [],
+      mpTags: (s as any).mpTags || [],
       type: 'submission'
     }))
 

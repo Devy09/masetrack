@@ -13,6 +13,8 @@ interface Certificate {
   batch: string
   isActive: boolean
   files: { fileName: string; fileUrl: string; fileSize: number; fileType: string }[]
+  remarks?: { id: number; content: string; createdAt: string; author?: { id: number; name: string; email: string } }[]
+  mpTags?: string[]
   user?: {
     id: number
     name: string
@@ -45,6 +47,8 @@ export default function Page() {
           batch: item.user?.batch || "",
           isActive: item.isActive,
           files: item.files || [],
+          remarks: item.remarks || [],
+          mpTags: item.mpTags || [],
           user: item.user,
         }))
         setCertificates(mapped)

@@ -92,7 +92,7 @@ export async function PATCH(request: NextRequest) {
     }
     
     const body = await request.json()
-    const { certificateId, status, isActive } = body
+    const { certificateId, status, isActive, remark } = body
     
     if (!certificateId) {
       return NextResponse.json({ 
@@ -132,9 +132,27 @@ export async function PATCH(request: NextRequest) {
             batch: true
           }
         },
-        files: true
+        files: true,
+        remarks: {
+          include: {
+            author: { select: { id: true, name: true, email: true } }
+          },
+          orderBy: { createdAt: 'desc' }
+        }
       }
     })
+
+    // Optionally create a remark if provided and status was changed
+    if (remark && typeof remark === 'string' && remark.trim().length > 0) {
+      await prisma.certificateRemark.create({
+        data: {
+          submissionId: certificateId,
+          authorId: Number(user.id),
+          authorRole: user.role,
+          content: remark.trim()
+        }
+      })
+    }
     
     return NextResponse.json({
       success: true,

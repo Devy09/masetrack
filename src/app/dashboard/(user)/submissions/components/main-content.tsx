@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Clock, CheckCircle, XCircle, Calendar, Download, GraduationCap, BookOpen } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/contexts/auth-context"
 import { toast } from "sonner"
 
@@ -21,6 +22,8 @@ interface Certificate {
   batch: string
   isActive: boolean
   files: { fileName: string; fileUrl: string; fileSize: number; fileType: string }[]
+  remarks?: { id: number; content: string; createdAt: string; author?: { id: number; name: string; email: string } }[]
+  mpTags?: string[]
   user?: {
     id: number
     name: string
@@ -55,12 +58,15 @@ export function DashboardSubmissions({
   const [previewOpen, setPreviewOpen] = React.useState(false)
   const [selectedItem, setSelectedItem] = React.useState<Certificate | null>(null)
   const [selectedFileIndex, setSelectedFileIndex] = React.useState(0)
+  const [remarkText, setRemarkText] = React.useState("")
+  const [mpFilter, setMpFilter] = React.useState<string>("")
 
   const filteredCertificates = certificates.filter((cert) => {
     return (
       (statusFilter === "" || cert.status === statusFilter) &&
       (typeFilter === "" || cert.type === typeFilter) &&
-      (semesterFilter === "" || cert.semester === semesterFilter)
+      (semesterFilter === "" || cert.semester === semesterFilter) &&
+      (mpFilter === "" || (cert.mpTags || []).includes(mpFilter))
     )
   })
   const openPreview = (item: Certificate) => {
@@ -74,10 +80,11 @@ export function DashboardSubmissions({
       const res = await fetch('/api/certificates/admin', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ certificateId: Number(id), status })
+        body: JSON.stringify({ certificateId: Number(id), status, remark: remarkText.trim() || undefined })
       })
       if (!res.ok) throw new Error('Failed to update status')
       toast.success(`Submission ${status}`)
+      setRemarkText("")
       window.location.reload()
     } catch (e) {
       console.error(e)
@@ -220,6 +227,16 @@ export function DashboardSubmissions({
             <option value="first">1st Semester</option>
             <option value="second">2nd Semester</option>
           </select>
+          <select
+            value={mpFilter}
+            onChange={(e) => setMpFilter(e.target.value)}
+            className="px-3 py-2 border border-border rounded-md bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">All MPs</option>
+            {Array.from(new Set(certificates.flatMap(c => c.mpTags || []))).map((mp) => (
+              <option key={mp} value={mp}>{mp}</option>
+            ))}
+          </select>
         </div>
 
         <div className="space-y-4">
@@ -244,6 +261,12 @@ export function DashboardSubmissions({
                     <span>{getSemesterDisplay(cert.semester)}</span>
                     <span>•</span>
                     <span>Batch: {cert.batch}</span>
+                  {(cert.mpTags && cert.mpTags.length > 0) && (
+                    <>
+                      <span>•</span>
+                      <span>MPs: {cert.mpTags.join(', ')}</span>
+                    </>
+                  )}
                     {canModerate && cert.user && (
                       <>
                         <span>•</span>
@@ -303,8 +326,6 @@ export function DashboardSubmissions({
             {renderPreview()}
             {canModerate && selectedItem && (
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" className="bg-green-500 text-white" onClick={() => updateStatus(selectedItem.id, 'approved')}>Approve</Button>
-                <Button size="sm" variant="outline" className="bg-red-500 text-white" onClick={() => updateStatus(selectedItem.id, 'rejected')}>Reject</Button>
                 <Button size="sm" variant="outline" className="bg-gray-500 text-white" onClick={() => toggleActive(selectedItem.id, selectedItem.isActive)}>
                   {selectedItem.isActive ? 'Set Inactive' : 'Set Active'}
                 </Button>
@@ -324,6 +345,35 @@ export function DashboardSubmissions({
                   <p className="text-xs text-muted-foreground truncate">{(f.fileType || '').split('/')[1] || f.fileType}</p>
                 </button>
               ))}
+            </div>
+            {/* Remarks Section */}
+            <div className="pt-4 space-y-2">
+              <p className="text-sm font-medium">Remarks</p>
+              <div className="space-y-2 max-h-[30vh] overflow-auto">
+                {(selectedItem?.remarks || []).length === 0 && (
+                  <p className="text-xs text-muted-foreground">No remarks yet.</p>
+                )}
+                {(selectedItem?.remarks || []).map((r) => (
+                  <div key={r.id} className="p-2 rounded border">
+                    <p className="text-xs text-muted-foreground mb-1">{new Date(r.createdAt).toLocaleString()} — {r.author?.name || 'Unknown'}</p>
+                    <p className="text-sm whitespace-pre-wrap">{r.content}</p>
+                  </div>
+                ))}
+              </div>
+              {canModerate && (
+                <div className="space-y-2">
+                  <Textarea
+                    placeholder="Add a remark for the student (optional)"
+                    value={remarkText}
+                    onChange={(e) => setRemarkText(e.target.value)}
+                    className="min-h-[80px]"
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="bg-green-500 text-white flex-1" onClick={() => selectedItem && updateStatus(selectedItem.id, 'approved')}>Approve</Button>
+                    <Button size="sm" variant="outline" className="bg-red-500 text-white flex-1" onClick={() => selectedItem && updateStatus(selectedItem.id, 'rejected')}>Reject</Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
