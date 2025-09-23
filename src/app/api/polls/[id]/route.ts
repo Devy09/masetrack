@@ -5,10 +5,11 @@ import prisma from "@/lib/prisma"
 // GET /api/polls/[id] - Get a specific poll
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const pollId = parseInt(params.id)
+    const { id } = await params
+    const pollId = parseInt(id)
     
     const poll = await prisma.poll.findUnique({
       where: { id: pollId },
@@ -73,7 +74,7 @@ export async function GET(
 // PUT /api/polls/[id] - Update a poll
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const cookieStore = await cookies()
@@ -86,7 +87,8 @@ export async function PUT(
     }
     const user = JSON.parse(sessionCookie.value)
 
-    const pollId = parseInt(params.id)
+    const { id } = await params
+    const pollId = parseInt(id)
     const body = await request.json()
     const { question, description, isActive } = body
 
@@ -171,7 +173,7 @@ export async function PUT(
 // DELETE /api/polls/[id] - Delete a poll
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const cookieStore = await cookies()
@@ -184,7 +186,8 @@ export async function DELETE(
     }
     const user = JSON.parse(sessionCookie.value)
 
-    const pollId = parseInt(params.id)
+    const { id } = await params
+    const pollId = parseInt(id)
 
     // Check if poll exists and user is the creator
     const existingPoll = await prisma.poll.findUnique({
