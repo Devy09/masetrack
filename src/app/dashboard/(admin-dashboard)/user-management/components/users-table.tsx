@@ -182,7 +182,9 @@ export function UsersTable({ users, onUserUpdate, onUserDelete }: UsersTableProp
                 <TableCell>
                   <div className="flex items-center gap-2">
                     {getRoleIcon(user.role)}
-                    <span className="font-medium text-gray-700 capitalize">{user.role}</span>
+                    <span className="font-medium text-gray-700">
+                      {user.role === 'personnel' ? 'Member of Parliament' : user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                    </span>
                   </div>
                 </TableCell>
                 <TableCell>{getStatusBadge(user.status)}</TableCell>

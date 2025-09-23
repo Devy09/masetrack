@@ -22,6 +22,8 @@ model User {
   // Relations
   submissions  CertificateSubmission[]
   remarksAuthored CertificateRemark[] @relation("UserRemarks")
+  polls        Poll[]
+  votes        Vote[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -75,4 +77,40 @@ enum CertificateTitle {
 enum Semester {
   FIRST
   SECOND
+}
+
+// Poll Models
+model Poll {
+  id          Int      @id @default(autoincrement())
+  question    String
+  description String?
+  isActive    Boolean  @default(true)
+  createdById Int
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  options     PollOption[]
+  votes       Vote[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PollOption {
+  id        Int    @id @default(autoincrement())
+  text      String
+  pollId    Int
+  poll      Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes     Vote[]
+  createdAt DateTime @default(now())
+}
+
+model Vote {
+  id         Int        @id @default(autoincrement())
+  pollId     Int
+  poll       Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  optionId   Int
+  option     PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  userId     Int
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime   @default(now())
+
+  @@unique([pollId, userId]) // One vote per user per poll
 }

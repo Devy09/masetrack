@@ -148,7 +148,7 @@ export function AddUserForm({ onClose }: AddUserFormProps) {
                     <SelectItem value="personnel" className="focus:bg-teal-50 focus:text-teal-900">
                       <div className="flex items-center gap-3">
                         <div className="w-2.5 h-2.5 bg-orange-500 rounded-full"></div>
-                        <span className="font-medium">Monitoring Personnel</span>
+                        <span className="font-medium">Member of Parliament</span>
                       </div>
                     </SelectItem>
                     <SelectItem value="user" className="focus:bg-teal-50 focus:text-teal-900">

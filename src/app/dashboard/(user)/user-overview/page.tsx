@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/contexts/auth-context"
 import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { User, Mail, Calendar, Shield, Phone, MapPin, Upload, FileText, Clock, CheckCircle, AlertCircle } from "lucide-react"
 import { EditProfileDialog } from "@/components/features/edit-profile-dialog"
 import { toast } from "sonner"
@@ -53,6 +54,9 @@ export default function Page() {
   const [statsLoading, setStatsLoading] = useState(true)
   const [recentSubmissions, setRecentSubmissions] = useState<SubmissionItem[]>([])
   const [submissionsLoading, setSubmissionsLoading] = useState(true)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<SubmissionItem | null>(null)
+  const [selectedFileIndex, setSelectedFileIndex] = useState(0)
 
   // Fetch user statistics and recent submissions
   const fetchUserStats = async () => {
@@ -111,6 +115,42 @@ export default function Page() {
     const sizes = ['Bytes', 'KB', 'MB', 'GB']
     const i = Math.floor(Math.log(bytes) / Math.log(k))
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  // Open preview dialog
+  const openPreview = (item: SubmissionItem) => {
+    setSelectedItem(item)
+    setSelectedFileIndex(0)
+    setPreviewOpen(true)
+  }
+
+  // Render preview content
+  const renderPreview = () => {
+    if (!selectedItem || !selectedItem.files || selectedItem.files.length === 0) return null
+    const file = selectedItem.files[selectedFileIndex]
+    const type = file.fileType || ""
+
+    if (type.startsWith("image/")) {
+      return (
+        <img src={file.fileUrl} alt={file.fileName} className="w-full h-auto max-h-[70vh] object-contain rounded" />
+      )
+    }
+    if (type.includes("pdf")) {
+      return (
+        <iframe
+          src={`${file.fileUrl}#toolbar=1&navpanes=0&scrollbar=1`}
+          className="w-full h-[70vh] rounded border"
+        />
+      )
+    }
+    return (
+      <div className="space-y-3">
+        <p className="text-sm text-muted-foreground">Preview not available for this file type.</p>
+        <a href={file.fileUrl} target="_blank" rel="noreferrer" className="underline text-primary">
+          Open/Download {file.fileName}
+        </a>
+      </div>
+    )
   }
 
   if (loading) {
@@ -327,8 +367,9 @@ export default function Page() {
         {/* Recent Submissions */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-xl">Recent Submissions</CardTitle>
-            <CardDescription>Your recently submitted certificates</CardDescription>
+            <CardTitle className="text-xl">
+                Recent Submissions
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {submissionsLoading ? (
@@ -347,7 +388,8 @@ export default function Page() {
                 {recentSubmissions.map((submission) => (
                   <div
                     key={submission.id}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/40 transition-colors"
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/40 transition-colors cursor-pointer"
+                    onClick={() => openPreview(submission)}
                   >
                     <div className="flex items-center gap-3">
                       {submission.status === 'approved' ? (
@@ -447,6 +489,40 @@ export default function Page() {
         open={isEditDialogOpen} 
         onOpenChange={setIsEditDialogOpen} 
       />
+
+      {/* Preview Dialog */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="w-[98vw] sm:max-w-lg md:max-w-3xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedItem?.title}
+              {selectedItem?.files && selectedItem.files.length > 1 && (
+                <span className="text-sm text-muted-foreground"> — {selectedItem.files[selectedFileIndex]?.fileName}</span>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="md:col-span-4">
+              {renderPreview()}
+            </div>
+            <div className="md:col-span-1 space-y-2">
+              <p className="text-sm font-medium">Files</p>
+              <div className="space-y-1 max-h-[60vh] overflow-auto pr-1">
+                {selectedItem?.files?.map((f, idx) => (
+                  <button
+                    key={f.fileUrl}
+                    className={`w-full text-left px-3 py-2 rounded border ${idx === selectedFileIndex ? 'bg-muted' : 'bg-background hover:bg-muted/50'}`}
+                    onClick={() => setSelectedFileIndex(idx)}
+                  >
+                    <p className="text-sm truncate">{f.fileName}</p>
+                    <p className="text-xs text-muted-foreground truncate">{(f.fileType || '').split('/')[1] || f.fileType}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

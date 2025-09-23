@@ -8,6 +8,7 @@ export async function POST() {
     sameSite: 'lax',
     expires: new Date(0),
     path: '/',
+    domain: process.env.NODE_ENV === 'production' ? undefined : undefined, // Let Vercel handle domain
   })
   return response
 }

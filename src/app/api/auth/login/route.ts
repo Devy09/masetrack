@@ -53,13 +53,14 @@ export async function POST(req: Request) {
       user: session
     })
 
-    // Set secure cookie
+    // Set secure cookie with proper Vercel configuration
     response.cookies.set('auth-session', JSON.stringify(session), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 1 week
       path: '/',
+      domain: process.env.NODE_ENV === 'production' ? undefined : undefined, // Let Vercel handle domain
     })
 
     return response

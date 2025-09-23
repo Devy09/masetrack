@@ -47,7 +47,7 @@ export function FiltersSection({
           <SelectContent>
             <SelectItem value="all">All Roles</SelectItem>
             <SelectItem value="admin">Admin</SelectItem>
-            <SelectItem value="personnel">Monitoring Personnel</SelectItem>
+            <SelectItem value="personnel">Member of Parliament</SelectItem>
             <SelectItem value="user">User</SelectItem>
           </SelectContent>
         </Select>

@@ -33,7 +33,7 @@ export function LoginForm({
   
     const success = await login(email, password)
     if (success) {
-      router.push('/dashboard/overview')
+      router.push('/dashboard/user-overview')
       router.refresh()
     } else {
       setError('Invalid email or password')

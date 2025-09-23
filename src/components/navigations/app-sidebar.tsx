@@ -23,7 +23,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { ClipboardEdit, ClipboardPlus, GraduationCap, FilePlus } from "lucide-react"
+import { ClipboardEdit, GraduationCap, FilePlus, ChartNoAxesCombined } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 
 // Define menu items for each role
@@ -37,17 +37,15 @@ type MenuItem = {
 const menuItems: { [key: string]: MenuItem[] } = {
   // Common items for all roles
   common: [
-    
+    {
+      title: "Dashboard",
+      url: "/dashboard/user-overview",
+      icon: IconDashboard,
+    },
   ],
   
   // Admin specific items
   admin: [
-    {
-      title: "Dashboard",
-      url: "/dashboard/overview",
-      icon: IconDashboard,
-      roles: ["admin", "personnel"],
-    },
     {
       title: "User Management",
       url: "/dashboard/user-management",
@@ -59,18 +57,6 @@ const menuItems: { [key: string]: MenuItem[] } = {
       url: "/dashboard/schedule-submission",
       icon: ClipboardEdit,
       roles: ["admin", "personnel"],
-    },  
-    {
-      title: "Calendar Management",
-      url: "/dashboard/calendar-management",
-      icon: IconCalendar,
-      roles: ["admin", "personnel"],
-    },
-    {
-      title: "Dashboard",
-      url: "/dashboard/user-overview",
-      icon: IconDashboard,
-      roles: ["user"],
     },
     {
       title: "Polls",
@@ -78,26 +64,32 @@ const menuItems: { [key: string]: MenuItem[] } = {
       icon: IconChartBar,
       roles: ["admin", "personnel", "user"],
     },
-  ],
-  
-  // Personnel specific items
-  personnel: [
+    {
+      title: "Analytics",
+      url: "/dashboard/analytics",
+      icon: ChartNoAxesCombined,
+      roles: ["admin", "personnel"],
+    },
     {
       title: "Reports",
       url: "/dashboard/reports",
       icon: IconReport,
       roles: ["personnel", "admin"],
     },
+    {
+      title: "Calendar Management",
+      url: "/dashboard/calendar-management",
+      icon: IconCalendar,
+      roles: ["admin", "personnel"],
+    },
+  ],
+  
+  // Personnel specific items
+  personnel: [
   ],
 
   // User specific items
   user: [
-    {
-      title: "Dashboard",
-      url: "/dashboard/user-overview",
-      icon: IconDashboard,
-      roles: ["user"],
-    },
   ],
   
   // Documents section
@@ -106,7 +98,7 @@ const menuItems: { [key: string]: MenuItem[] } = {
       title: "Submit Certificate",
       url: "/dashboard/submit-certificate",
       icon: FilePlus,
-      roles: ["user", "admin"],
+      roles: ["user"],
     },
     {
       title: "All Submissions",
