@@ -9,7 +9,7 @@ export default function LoginPage() {
       {/* Background Image */}
       <div className="fixed inset-0 -z-10">
         <Image
-          src="/geometric-hero-bg.jpg"
+          src="/barmm-bg.jpg"
           alt="Background"
           fill
           className="object-cover"

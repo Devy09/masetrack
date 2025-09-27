@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
-import { existsSync } from 'fs'
+import { put } from '@vercel/blob'
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,28 +55,22 @@ export async function POST(request: NextRequest) {
         }, { status: 400 })
       }
       
-      // Create uploads directory if it doesn't exist
-      const uploadsDir = join(process.cwd(), 'public', 'uploads')
-      if (!existsSync(uploadsDir)) {
-        await mkdir(uploadsDir, { recursive: true })
-      }
-      
-      // Generate unique filename
+      // Generate unique filename for Blob storage
       const timestamp = Date.now()
-      const fileExtension = file.name.split('.').pop()
-      const uniqueFileName = `${timestamp}-${user.id}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
-      
-      // Save file to disk
-      const bytes = await file.arrayBuffer()
-      const buffer = Buffer.from(bytes)
-      const filePath = join(uploadsDir, uniqueFileName)
-      
-      await writeFile(filePath, buffer)
-      
+      const normalizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+      const uniqueFileName = `${timestamp}-${user.id}-${normalizedName}`
+
+      // Upload directly to Vercel Blob (public access)
+      const blob = await put(uniqueFileName, file, {
+        access: 'public',
+        contentType: file.type,
+        token: process.env.BLOB_READ_WRITE_TOKEN,
+      })
+
       // Store file information
       uploadedFiles.push({
         fileName: file.name,
-        fileUrl: `/uploads/${uniqueFileName}`,
+        fileUrl: blob.url,
         fileSize: file.size,
         fileType: file.type,
         originalName: file.name
