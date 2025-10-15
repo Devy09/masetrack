@@ -8,8 +8,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/contexts/auth-context"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { User, Mail, Calendar, Shield, Phone, MapPin, Upload, FileText, Clock, CheckCircle, AlertCircle } from "lucide-react"
+import { User, Mail, Calendar, Shield, Phone, MapPin, Upload, FileText, Clock, CheckCircle, AlertCircle, Lock } from "lucide-react"
 import { EditProfileDialog } from "@/components/features/edit-profile-dialog"
+import { ChangePasswordDialog } from "@/components/features/change-password-dialog"
 import { toast } from "sonner"
 import { formatDistanceToNow } from "date-fns"
 
@@ -41,6 +42,7 @@ interface SubmissionItem {
 export default function Page() {
   const { user, loading, refreshUser } = useAuth()
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [stats, setStats] = useState<SubmissionStats>({
     totalSubmissions: 0,
@@ -352,12 +354,22 @@ export default function Page() {
           </div>
 
           <div className="pt-4 border-t">
-            <Button 
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-              onClick={() => setIsEditDialogOpen(true)}
-            >
-              Edit Profile
-            </Button>
+            <div className="flex gap-3">
+              <Button 
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                onClick={() => setIsEditDialogOpen(true)}
+              >
+                Edit Profile
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setIsChangePasswordDialogOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <Lock className="h-4 w-4" />
+                Change Password
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -488,6 +500,12 @@ export default function Page() {
       <EditProfileDialog 
         open={isEditDialogOpen} 
         onOpenChange={setIsEditDialogOpen} 
+      />
+
+      {/* Change Password Dialog */}
+      <ChangePasswordDialog 
+        open={isChangePasswordDialogOpen} 
+        onOpenChange={setIsChangePasswordDialogOpen} 
       />
 
       {/* Preview Dialog */}
