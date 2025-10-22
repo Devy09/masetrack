@@ -18,13 +18,37 @@ model User {
   image       String?
   phoneNumber String?
   address     String?
-  
+
   // Relations
   submissions  CertificateSubmission[]
   remarksAuthored CertificateRemark[] @relation("UserRemarks")
   polls        Poll[]
   votes        Vote[]
+  granteesAdded Grantee[] @relation("PersonnelGrantees")
+  granteeRecord Grantee? // One-to-one relation for users who are grantees
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Grantee {
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String
+  batch       String
+  phoneNumber String?
+  address     String?
+  status      String   @default("active")
+  image       String?
   
+  // Reference to the original user
+  userId      Int      @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Which personnel added this grantee
+  addedById   Int
+  addedBy     User     @relation("PersonnelGrantees", fields: [addedById], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

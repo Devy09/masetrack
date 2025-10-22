@@ -82,6 +82,12 @@ const menuItems: { [key: string]: MenuItem[] } = {
       icon: IconCalendar,
       roles: ["admin", "personnel"],
     },
+    {
+      title: "Grantees Management",
+      url: "/dashboard/grantee-management",
+      icon: IconUsers,
+      roles: ["admin", "personnel"],
+    },
   ],
   
   // Personnel specific items
