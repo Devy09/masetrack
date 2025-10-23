@@ -40,14 +40,18 @@ export default function StudentManagement() {
     try {
       setLoading(true)
       const response = await fetch('/api/admin-api/grantees')
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch grantees')
+        const errorText = await response.text()
+        console.error('API Error:', errorText)
+        throw new Error(`Failed to fetch grantees: ${response.status}`)
       }
+      
       const data = await response.json()
       setStudents(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
       console.error('Error fetching grantees:', err)
+      setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
     }

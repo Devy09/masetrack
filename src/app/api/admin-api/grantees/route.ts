@@ -8,18 +8,32 @@ export async function GET(request: NextRequest) {
     const cookieStore = await cookies()
     const session = cookieStore.get('auth-session')
 
-    let currentUser: { id: number; role: string } | null = null
+    let currentUser: { id: string | number; role: string } | null = null
     if (session?.value) {
-      try { currentUser = JSON.parse(session.value) } catch {}
+      try { 
+        currentUser = JSON.parse(session.value)
+      } catch (error) {
+        console.error('Error parsing session:', error)
+        return NextResponse.json(
+          { error: 'Invalid session' },
+          { status: 401 }
+        )
+      }
     }
 
+    if (!currentUser) {
+      return NextResponse.json(
+        { error: 'Not authenticated' },
+        { status: 401 }
+      )
+    }
+
+    const whereClause = currentUser.role === 'personnel'
+      ? { addedById: Number(currentUser.id) }
+      : {}
+
     const grantees = await prisma.grantee.findMany({
-      where: {
-        // Only filter by addedById if user is personnel (not admin)
-        ...(currentUser && currentUser.role === 'personnel'
-          ? { addedById: currentUser.id }
-          : {}),
-      },
+      where: whereClause,
       select: {
         id: true,
         name: true,
