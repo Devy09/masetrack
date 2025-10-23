@@ -8,27 +8,24 @@ datasource db {
 }
 
 model User {
-  id          Int      @id @default(autoincrement())
-  name        String
-  role        String
-  email       String   @unique
-  status      String
-  batch       String
-  password    String
-  image       String?
-  phoneNumber String?
-  address     String?
-
-  // Relations
-  submissions  CertificateSubmission[]
-  remarksAuthored CertificateRemark[] @relation("UserRemarks")
-  polls        Poll[]
-  votes        Vote[]
-  granteesAdded Grantee[] @relation("PersonnelGrantees")
-  granteeRecord Grantee? // One-to-one relation for users who are grantees
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              Int                     @id @default(autoincrement())
+  email           String                  @unique
+  password        String
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  batch           String
+  name            String
+  role            String
+  status          String
+  image           String?
+  address         String?
+  phoneNumber     String?
+  remarksAuthored CertificateRemark[]     @relation("UserRemarks")
+  submissions     CertificateSubmission[]
+  granteesAdded   Grantee[]               @relation("PersonnelGrantees")
+  granteeRecord   Grantee?
+  polls           Poll[]
+  votes           Vote[]
 }
 
 model Grantee {
@@ -40,59 +37,87 @@ model Grantee {
   address     String?
   status      String   @default("active")
   image       String?
-  
-  // Reference to the original user
   userId      Int      @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Which personnel added this grantee
   addedById   Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   addedBy     User     @relation("PersonnelGrantees", fields: [addedById], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-
 model CertificateSubmission {
-  id          Int               @id @default(autoincrement())
+  id          Int                 @id @default(autoincrement())
   title       CertificateTitle
-  semester    Semester          @default(FIRST)
+  semester    Semester            @default(FIRST)
   description String?
-  status      String            @default("pending")
-  isActive    Boolean           @default(true)
+  status      String              @default("pending")
+  isActive    Boolean             @default(true)
   userId      Int
-  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  mpTags      String[]
   files       CertificateFile[]
   remarks     CertificateRemark[]
-  mpTags      String[]
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model CertificateFile {
-  id            Int                    @id @default(autoincrement())
-  submissionId  Int
-  submission    CertificateSubmission  @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  fileName      String
-  fileUrl       String
-  fileSize      Int
-  fileType      String
-  createdAt     DateTime               @default(now())
+  id           Int                   @id @default(autoincrement())
+  submissionId Int
+  fileName     String
+  fileUrl      String
+  fileSize     Int
+  fileType     String
+  createdAt    DateTime              @default(now())
+  submission   CertificateSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 }
 
 model CertificateRemark {
-  id             Int                   @id @default(autoincrement())
-  submissionId   Int
-  submission     CertificateSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
-  authorId       Int
-  author         User                  @relation("UserRemarks", fields: [authorId], references: [id], onDelete: Cascade)
-  authorRole     String
-  content        String
-  createdAt      DateTime              @default(now())
+  id           Int                   @id @default(autoincrement())
+  submissionId Int
+  authorId     Int
+  authorRole   String
+  content      String
+  createdAt    DateTime              @default(now())
+  author       User                  @relation("UserRemarks", fields: [authorId], references: [id], onDelete: Cascade)
+  submission   CertificateSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 }
 
-// ENUMS 
+model Poll {
+  id          Int          @id @default(autoincrement())
+  question    String
+  description String?
+  isActive    Boolean      @default(true)
+  createdById Int
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  createdBy   User         @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  options     PollOption[]
+  votes       Vote[]
+}
+
+model PollOption {
+  id        Int      @id @default(autoincrement())
+  text      String
+  pollId    Int
+  createdAt DateTime @default(now())
+  poll      Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes     Vote[]
+}
+
+model Vote {
+  id        Int        @id @default(autoincrement())
+  pollId    Int
+  optionId  Int
+  userId    Int
+  createdAt DateTime   @default(now())
+  option    PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  poll      Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, userId])
+}
+
 enum CertificateTitle {
   ENROLLMENT
   GRADES
@@ -101,40 +126,4 @@ enum CertificateTitle {
 enum Semester {
   FIRST
   SECOND
-}
-
-// Poll Models
-model Poll {
-  id          Int      @id @default(autoincrement())
-  question    String
-  description String?
-  isActive    Boolean  @default(true)
-  createdById Int
-  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
-  options     PollOption[]
-  votes       Vote[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model PollOption {
-  id        Int    @id @default(autoincrement())
-  text      String
-  pollId    Int
-  poll      Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
-  votes     Vote[]
-  createdAt DateTime @default(now())
-}
-
-model Vote {
-  id         Int        @id @default(autoincrement())
-  pollId     Int
-  poll       Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
-  optionId   Int
-  option     PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
-  userId     Int
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt  DateTime   @default(now())
-
-  @@unique([pollId, userId]) // One vote per user per poll
 }

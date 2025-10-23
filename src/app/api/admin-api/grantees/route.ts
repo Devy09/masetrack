@@ -15,10 +15,8 @@ export async function GET(request: NextRequest) {
 
     const grantees = await prisma.grantee.findMany({
       where: {
-        ...(currentUser && currentUser.role !== 'admin' && currentUser.role !== 'personnel'
-          ? { addedById: currentUser.id } // default to own if not admin/personnel
-          : {}),
-        ...(currentUser && (currentUser.role === 'personnel')
+        // Only filter by addedById if user is personnel (not admin)
+        ...(currentUser && currentUser.role === 'personnel'
           ? { addedById: currentUser.id }
           : {}),
       },
