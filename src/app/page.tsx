@@ -21,8 +21,13 @@ export default function LandingPage() {
         <section className="w-full min-h-screen flex items-center relative bg-gradient-to-br from-primary/5 via-primary/10 to-background overflow-hidden">
           {/* Geometric Background */}
           <div
-            className="bg-teal-400 absolute inset-0 bg-cover bg-center bg-no-repeat dark:opacity-6"
-            style={{ backgroundImage: "url(/barmm-bg.jpg)" }}
+            className="absolute inset-0 bg-center bg-no-repeat dark:opacity-6"
+            style={{ 
+              backgroundImage: "url(/masebg.jpg)",
+              backgroundSize: "cover",
+              backgroundPosition: "center center",
+              backgroundAttachment: "fixed"
+            }}
           />
 
           {/* Enhanced geometric overlay patterns */}
@@ -58,7 +63,7 @@ export default function LandingPage() {
           </div>
 
           {/* Gradient overlay for text readability */}
-          <div className="absolute inset-0 from-background/20 via-transparent to-background/40 dark:from-background/40 dark:to-background/60" />
+          <div className="absolute inset-0 bg-gradient-to-br from-background/20 via-transparent to-background/40 dark:from-background/40 dark:to-background/60" />
 
           <div className="container mx-auto px-4 md:px-6 relative z-10">
             <div className="flex flex-col items-center space-y-8 text-center">
