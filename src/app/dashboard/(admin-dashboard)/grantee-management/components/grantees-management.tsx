@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react"
 import { AnimatePresence, motion } from "motion/react"
+import { toast } from "sonner"
 import { useOutsideClick } from "@/hooks/use-outside-click"
 import { StudentForm } from "./grantees-form"
 import { CloseIcon } from "./close-icon"
@@ -93,6 +94,8 @@ export default function StudentManagement() {
 
   const handleAddStudent = async (formData: Omit<Student, "id" | "createdAt" | "updatedAt"> & { userId?: number }) => {
     try {
+      console.log('Submitting grantee data:', formData)
+      
       const response = await fetch('/api/admin-api/grantees', {
         method: 'POST',
         headers: {
@@ -102,15 +105,31 @@ export default function StudentManagement() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to add grantee')
+        const errorData = await response.json()
+        console.error('Server error:', errorData)
+        
+        // Show specific toast notification for "already a grantee" error
+        if (errorData.error === 'User is already a grantee') {
+          toast.error('User is already a grantee', {
+            description: 'This user has already been enrolled as a grantee.',
+          })
+        } else {
+          toast.error(errorData.error || 'Failed to add grantee', {
+            description: 'Please try again.',
+          })
+        }
+        
+        throw new Error(errorData.error || 'Failed to add grantee')
       }
 
       const newStudent = await response.json()
       setStudents([newStudent, ...students])
       setIsFormOpen(false)
+      toast.success('Grantee added successfully', {
+        description: `${newStudent.name} has been enrolled as a grantee.`,
+      })
     } catch (err) {
       console.error('Error adding grantee:', err)
-      alert('Failed to add grantee. Please try again.')
     }
   }
 
@@ -130,7 +149,11 @@ export default function StudentManagement() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to update grantee')
+        const errorData = await response.json()
+        toast.error('Failed to update grantee', {
+          description: errorData.error || 'Please try again.',
+        })
+        throw new Error(errorData.error || 'Failed to update grantee')
       }
 
       const updatedStudent = await response.json()
@@ -138,9 +161,11 @@ export default function StudentManagement() {
       setEditingStudent(null)
       setIsFormOpen(false)
       setActive(null)
+      toast.success('Grantee updated successfully', {
+        description: `${updatedStudent.name}'s information has been updated.`,
+      })
     } catch (err) {
       console.error('Error updating grantee:', err)
-      alert('Failed to update grantee. Please try again.')
     }
   }
 
@@ -155,14 +180,21 @@ export default function StudentManagement() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to delete grantee')
+        const errorData = await response.json()
+        toast.error('Failed to delete grantee', {
+          description: errorData.error || 'Please try again.',
+        })
+        throw new Error(errorData.error || 'Failed to delete grantee')
       }
 
+      const deletedStudent = students.find((s) => s.id === id)
       setStudents(students.filter((s) => s.id !== id))
       setActive(null)
+      toast.success('Grantee removed successfully', {
+        description: deletedStudent ? `${deletedStudent.name} has been removed from grantees.` : 'The grantee has been removed.',
+      })
     } catch (err) {
       console.error('Error deleting grantee:', err)
-      alert('Failed to delete grantee. Please try again.')
     }
   }
 

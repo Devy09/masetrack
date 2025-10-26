@@ -65,7 +65,11 @@ export async function GET(request: NextRequest) {
 // POST - Add new grantee (create Grantee record)
 export async function POST(request: Request) {
   try {
-    const { userId, batch, phoneNumber, address, status = 'active' } = await request.json();
+    // Log the incoming request for debugging
+    const requestBody = await request.json();
+    console.log('POST /api/admin-api/grantees - Request body:', requestBody);
+    
+    const { userId, batch, phoneNumber, address, status = 'active' } = requestBody;
 
     const cookieStore = await cookies()
     const session = cookieStore.get('auth-session')
@@ -75,8 +79,9 @@ export async function POST(request: Request) {
     const currentUser = JSON.parse(session.value)
 
     if (!userId) {
+      console.log('POST /api/admin-api/grantees - Missing userId in request');
       return NextResponse.json(
-        { error: 'User ID is required' },
+        { error: 'User ID is required', receivedData: requestBody },
         { status: 400 }
       );
     }
@@ -99,6 +104,7 @@ export async function POST(request: Request) {
     });
 
     if (existingGrantee) {
+      console.log(`POST /api/admin-api/grantees - User ${userId} is already a grantee`);
       return NextResponse.json(
         { error: 'User is already a grantee' },
         { status: 400 }
@@ -136,8 +142,9 @@ export async function POST(request: Request) {
     return NextResponse.json(newGrantee);
   } catch (error) {
     console.error('Error adding grantee:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to add grantee' },
+      { error: 'Failed to add grantee', details: errorMessage },
       { status: 500 }
     );
   }

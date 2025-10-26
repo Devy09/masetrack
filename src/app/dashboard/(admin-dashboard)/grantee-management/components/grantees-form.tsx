@@ -91,16 +91,20 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
     
     // For new grantees, use the selected user's data directly
     if (!student && selectedUser) {
+      if (!selectedUser.id) {
+        alert("Error: No user selected or user ID is missing")
+        return
+      }
+      
       const submitData = {
         userId: selectedUser.id,
-        name: selectedUser.name,
-        email: selectedUser.email,
-        image: selectedUser.image,
         batch: selectedUser.batch,
         phoneNumber: selectedUser.phoneNumber,
         address: selectedUser.address,
-        status: selectedUser.status,
+        status: selectedUser.status || 'active',
       }
+      
+      console.log('Submitting with data:', submitData)
       onSubmit(submitData)
     } else {
       // For editing existing grantees, use form data
