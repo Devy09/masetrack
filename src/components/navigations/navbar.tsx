@@ -19,7 +19,7 @@ const NavBar = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768) {
+      if (window.innerWidth >= 640) {
         setMobileMenuOpen(false)
       }
     }
@@ -50,8 +50,8 @@ const NavBar = () => {
           </span>
         </Link>
 
-        {/* Navigation - Hidden on mobile, centered on desktop */}
-        <nav className="hidden md:flex items-center">
+        {/* Navigation - Hidden on mobile, visible on tablet and desktop */}
+        <nav className="hidden sm:flex items-center">
           <AnimatedBackground
             defaultValue={TABS[0].name}
             className="rounded-lg bg-teal-100 dark:bg-teal-800/50"
@@ -67,7 +67,7 @@ const NavBar = () => {
                 key={tab.name}
                 data-id={tab.name}
                 href={tab.href}
-                className="px-4 py-2 text-sm font-medium text-teal-700 transition-colors duration-200 hover:text-teal-800 dark:text-teal-300 dark:hover:text-teal-100 relative z-10"
+                className="px-3 py-2 text-sm font-medium text-teal-700 transition-colors duration-200 hover:text-teal-800 dark:text-teal-300 dark:hover:text-teal-100 relative z-10 sm:px-3 md:px-4"
               >
                 {tab.name}
               </Link>
@@ -105,26 +105,26 @@ const NavBar = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Desktop Auth Buttons */}
-          <div className="hidden md:flex items-center space-x-2">
+          {/* Desktop Auth Buttons - Show on tablet and desktop */}
+          <div className="hidden sm:flex items-center space-x-1 md:space-x-2">
             <Button
               asChild
               variant="ghost"
               size="sm"
-              className="text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:text-teal-400 dark:hover:text-teal-300 dark:hover:bg-teal-900/20"
+              className="text-teal-600 hover:text-teal-700 hover:bg-teal-50 dark:text-teal-400 dark:hover:text-teal-300 dark:hover:bg-teal-900/20 text-xs sm:text-sm"
             >
               <Link href="/login">Sign In</Link>
             </Button>
-            <Button asChild size="sm" className="bg-teal-500 text-white hover:bg-teal-600 shadow-sm">
+            <Button asChild size="sm" className="bg-teal-500 text-white hover:bg-teal-600 shadow-sm text-xs sm:text-sm">
               <Link href="/signup">Get Started</Link>
             </Button>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button - Show only on mobile */}
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden h-9 w-9 hover:bg-teal-50 dark:hover:bg-teal-900/20"
+            className="sm:hidden h-9 w-9 hover:bg-teal-50 dark:hover:bg-teal-900/20"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle mobile menu"
             aria-expanded={mobileMenuOpen}
@@ -146,7 +146,7 @@ const NavBar = () => {
       </div>
 
       <div
-        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+        className={`sm:hidden overflow-hidden transition-all duration-300 ease-in-out ${
           mobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
         }`}
       >

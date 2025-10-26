@@ -59,6 +59,12 @@ const menuItems: { [key: string]: MenuItem[] } = {
       roles: ["admin", "personnel"],
     },
     {
+      title: "Grantees Management",
+      url: "/dashboard/grantee-management",
+      icon: IconUsers,
+      roles: ["admin", "personnel"],
+    },
+    {
       title: "Polls",
       url: "/dashboard/polls",
       icon: IconChartBar,
@@ -80,12 +86,6 @@ const menuItems: { [key: string]: MenuItem[] } = {
       title: "Calendar Management",
       url: "/dashboard/calendar-management",
       icon: IconCalendar,
-      roles: ["admin", "personnel"],
-    },
-    {
-      title: "Grantees Management",
-      url: "/dashboard/grantee-management",
-      icon: IconUsers,
       roles: ["admin", "personnel"],
     },
   ],

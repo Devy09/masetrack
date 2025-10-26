@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import prisma from '@/lib/prisma'
+import { sendCertificateApprovalEmail, sendCertificateRejectionEmail } from '@/lib/email'
 
 // GET all certificates for admin review
 export async function GET(request: NextRequest) {
@@ -152,6 +153,51 @@ export async function PATCH(request: NextRequest) {
           content: remark.trim()
         }
       })
+    }
+
+    // Send email notification if status was changed to approved or rejected
+    if (status === 'approved' || status === 'rejected') {
+      console.log('Status changed to:', status, '- attempting to send email')
+      try {
+        const mapTitle = (t: string) => (t === 'ENROLLMENT' ? 'Certificate of Enrollment' : 'Certificate of Grades')
+        const mapSemester = (s: string) => {
+          if (s === 'FIRST') return 'First Semester'
+          if (s === 'SECOND') return 'Second Semester'
+          return 'First Semester' // default fallback
+        }
+
+        const emailData = {
+          userName: certificate.user.name,
+          userEmail: certificate.user.email,
+          certificateTitle: mapTitle(certificate.title as unknown as string),
+          semester: mapSemester(certificate.semester as unknown as string),
+          submissionDate: certificate.createdAt.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }),
+          remark: remark && typeof remark === 'string' && remark.trim().length > 0 ? remark.trim() : undefined
+        }
+
+        if (status === 'approved') {
+          console.log('Sending approval email...')
+          const emailResult = await sendCertificateApprovalEmail({
+            ...emailData,
+            approvedBy: user.name
+          })
+          console.log('Email result:', emailResult)
+        } else if (status === 'rejected') {
+          console.log('Sending rejection email...')
+          const emailResult = await sendCertificateRejectionEmail({
+            ...emailData,
+            rejectedBy: user.name
+          })
+          console.log('Email result:', emailResult)
+        }
+      } catch (emailError) {
+        console.error('Error sending email notification:', emailError)
+        // Don't fail the entire request if email fails
+      }
     }
     
     return NextResponse.json({

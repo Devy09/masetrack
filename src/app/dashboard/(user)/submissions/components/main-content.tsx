@@ -193,16 +193,16 @@ export function DashboardSubmissions({
         <CardDescription>View all your certificate submissions and their current status</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <Input
             type="text"
             placeholder="Search certificates..."
-            className="px-3 py-2 border border-border rounded-md bg-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="px-3 py-2 border border-border rounded-md bg-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full"
           />
           <select
             value={statusFilter}
             onChange={(e) => onStatusFilterChange(e.target.value)}
-            className="px-3 py-2 border border-border rounded-md bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="px-3 py-2 border border-border rounded-md bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full"
           >
             <option value="">All Status</option>
             <option value="approved">Approved</option>
@@ -212,7 +212,7 @@ export function DashboardSubmissions({
           <select
             value={typeFilter}
             onChange={(e) => onTypeFilterChange(e.target.value)}
-            className="px-3 py-2 border border-border rounded-md bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="px-3 py-2 border border-border rounded-md bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full"
           >
             <option value="">All Types</option>
             <option value="enrollment">Enrollment</option>
@@ -221,21 +221,11 @@ export function DashboardSubmissions({
           <select
             value={semesterFilter}
             onChange={(e) => onSemesterFilterChange(e.target.value)}
-            className="px-3 py-2 border border-border rounded-md bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="px-3 py-2 border border-border rounded-md bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full"
           >
             <option value="">All Semesters</option>
             <option value="first">1st Semester</option>
             <option value="second">2nd Semester</option>
-          </select>
-          <select
-            value={mpFilter}
-            onChange={(e) => setMpFilter(e.target.value)}
-            className="px-3 py-2 border border-border rounded-md bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="">All MPs</option>
-            {Array.from(new Set(certificates.flatMap(c => c.mpTags || []))).map((mp) => (
-              <option key={mp} value={mp}>{mp}</option>
-            ))}
           </select>
         </div>
 
@@ -243,49 +233,44 @@ export function DashboardSubmissions({
           {filteredCertificates.map((cert) => (
             <div
               key={cert.id}
-              className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+              className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg bg-card hover:bg-muted/50 transition-colors cursor-pointer gap-3"
               onClick={() => openPreview(cert)}
             >
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted">
+              <div className="flex items-center space-x-4 flex-1 min-w-0">
+                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted flex-shrink-0">
                   {getCertificateTypeIcon(cert.type)}
                 </div>
-                <div className="space-y-1">
-                  <h4 className="font-medium text-foreground">{cert.name}</h4>
-                  <div className="flex items-center space-x-4 text-xs text-muted-foreground">
+                <div className="space-y-1 min-w-0 flex-1">
+                  <h4 className="font-medium text-foreground truncate">{cert.name}</h4>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs text-muted-foreground">
                     <div className="flex items-center space-x-1">
-                      <Calendar className="h-3 w-3" />
-                      <span>Submitted: {new Date(cert.submittedDate).toLocaleDateString()}</span>
+                      <Calendar className="h-3 w-3 flex-shrink-0" />
+                      <span className="truncate">Submitted: {new Date(cert.submittedDate).toLocaleDateString()}</span>
                     </div>
-                    <span>•</span>
-                    <span>{getSemesterDisplay(cert.semester)}</span>
-                    <span>•</span>
-                    <span>Batch: {cert.batch}</span>
+                    <span className="hidden sm:inline">•</span>
+                    <span className="truncate">{getSemesterDisplay(cert.semester)}</span>
+                    <span className="hidden sm:inline">•</span>
+                    <span className="truncate">Batch: {cert.batch}</span>
                   {(cert.mpTags && cert.mpTags.length > 0) && (
                     <>
-                      <span>•</span>
-                      <span>MPs: {cert.mpTags.join(', ')}</span>
+                      <span className="hidden sm:inline">•</span>
+                      <span className="truncate">MPs: {cert.mpTags.join(', ')}</span>
                     </>
                   )}
                     {canModerate && cert.user && (
                       <>
-                        <span>•</span>
-                        <span>By: {cert.user.name}</span>
+                        <span className="hidden sm:inline">•</span>
+                        <span className="truncate">By: {cert.user.name}</span>
                       </>
                     )}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center justify-end sm:justify-start space-x-2 sm:space-x-3 flex-wrap gap-2">
                 {getCertificateTypeBadge(cert.type)}
-                <Badge variant={cert.isActive ? "default" : "secondary"}>{cert.isActive ? "Active" : "Inactive"}</Badge>
+                <Badge variant={cert.isActive ? "default" : "secondary"} className="text-xs">{cert.isActive ? "Active" : "Inactive"}</Badge>
                 {getStatusBadge(cert.status)}
                 {getStatusIcon(cert.status)}
-                {cert.status === "rejected" && (
-                  <Button size="sm" variant="outline" onClick={onSwitchToUpload}>
-                    Resubmit
-                  </Button>
-                )}
               </div>
             </div>
           ))}
