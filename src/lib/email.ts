@@ -1,6 +1,9 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazy initialization to avoid build-time errors
+function getResendClient() {
+  return new Resend(process.env.RESEND_API_KEY)
+}
 
 export interface CertificateApprovalEmailData {
   userName: string
@@ -73,6 +76,7 @@ export async function sendCertificateApprovalEmail(data: CertificateApprovalEmai
       return { success: false, error: 'RESEND_API_KEY is not configured' }
     }
 
+    const resend = getResendClient()
     const result = await resend.emails.send({
       from: 'MASE Track <onboarding@resend.dev>', // Using Resend's default domain for testing
       to: [userEmail],
@@ -92,6 +96,11 @@ export async function sendCertificateApprovalEmail(data: CertificateApprovalEmai
 
 export async function sendCertificateRejectionEmail(data: Omit<CertificateApprovalEmailData, 'approvedBy'> & { rejectedBy: string }) {
   try {
+    if (!process.env.RESEND_API_KEY) {
+      console.error('RESEND_API_KEY is not set in environment variables')
+      return { success: false, error: 'RESEND_API_KEY is not configured' }
+    }
+
     const { userName, userEmail, certificateTitle, semester, submissionDate, rejectedBy, remark } = data
 
     const emailContent = `
@@ -146,6 +155,7 @@ export async function sendCertificateRejectionEmail(data: Omit<CertificateApprov
       </div>
     `
 
+    const resend = getResendClient()
     const result = await resend.emails.send({
       from: 'MASE Track <onboarding@resend.dev>', // Using Resend's default domain for testing
       to: [userEmail],
