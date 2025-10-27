@@ -97,11 +97,14 @@ export function StudentForm({ student, onSubmit, onCancel }: StudentFormProps) {
       }
       
       const submitData = {
-        userId: selectedUser.id,
+        name: selectedUser.name,
+        email: selectedUser.email,
         batch: selectedUser.batch,
         phoneNumber: selectedUser.phoneNumber,
         address: selectedUser.address,
         status: selectedUser.status || 'active',
+        image: selectedUser.image,
+        userId: selectedUser.id,
       }
       
       console.log('Submitting with data:', submitData)
