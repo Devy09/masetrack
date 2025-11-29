@@ -8,26 +8,27 @@ datasource db {
 }
 
 model User {
-  id              Int                     @id @default(autoincrement())
-  email           String                  @unique
-  password        String
-  createdAt       DateTime                @default(now())
-  updatedAt       DateTime                @updatedAt
-  batch           String
-  name            String
-  role            String
-  status          String
-  image           String?
-  address         String?
-  phoneNumber     String?
-  remarksAuthored CertificateRemark[]     @relation("UserRemarks")
-  submissions     CertificateSubmission[]
-  granteesAdded   Grantee[]               @relation("PersonnelGrantees")
-  granteeRecord   Grantee?
-  polls           Poll[]
-  votes           Vote[]
-  deadlines       Deadline[]
-  activityLogs    ActivityLog[]
+  id                 Int                     @id @default(autoincrement())
+  email              String                  @unique
+  password           String
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  batch              String
+  name               String
+  role               String
+  status             String
+  image              String?
+  address            String?
+  phoneNumber        String?
+  remarksAuthored    CertificateRemark[]     @relation("UserRemarks")
+  submissions        CertificateSubmission[]
+  granteesAdded      Grantee[]               @relation("PersonnelGrantees")
+  granteeRecord      Grantee?
+  polls              Poll[]
+  votes              Vote[]
+  deadlines          Deadline[]
+  activityLogs       ActivityLog[]
+  calendarActivities CalendarActivity[]
 }
 
 model Grantee {
@@ -145,11 +146,11 @@ model Deadline {
 
 model ActivityLog {
   id          Int      @id @default(autoincrement())
-  action      String   // e.g., "certificate_submitted", "certificate_approved", "grantee_added", "user_login", etc.
-  entityType  String?  // e.g., "CertificateSubmission", "Grantee", "User", "Poll", "Deadline"
-  entityId    Int?     // ID of the related entity
-  description String   // Human-readable description of the action
-  metadata    String?  // JSON string for additional context
+  action      String // e.g., "certificate_submitted", "certificate_approved", "grantee_added", "user_login", etc.
+  entityType  String? // e.g., "CertificateSubmission", "Grantee", "User", "Poll", "Deadline"
+  entityId    Int? // ID of the related entity
+  description String // Human-readable description of the action
+  metadata    String? // JSON string for additional context
   userId      Int
   createdAt   DateTime @default(now())
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -158,4 +159,21 @@ model ActivityLog {
   @@index([action])
   @@index([entityType, entityId])
   @@index([createdAt])
+}
+
+model CalendarActivity {
+  id        Int      @id @default(autoincrement())
+  title     String
+  date      DateTime // Full date (YYYY-MM-DD)
+  time      String // Time string (e.g., "10:00 AM", "All Day")
+  category  String // "meeting" | "event" | "deadline"
+  color     String // Color class (e.g., "bg-blue-500")
+  userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([date])
+  @@index([userId])
+  @@index([category])
 }
