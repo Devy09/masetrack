@@ -7,7 +7,6 @@ import {
   IconDashboard,
   IconFolder,
   IconHelp,
-  IconReport,
   IconSettings,
   IconUsers,
 } from "@tabler/icons-react"
@@ -23,7 +22,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { ClipboardEdit, GraduationCap, FilePlus, ChartNoAxesCombined, Clock } from "lucide-react"
+import { ClipboardEdit, GraduationCap, FilePlus, ChartNoAxesCombined, Clock, History } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 
 // Define menu items for each role
@@ -54,7 +53,7 @@ const menuItems: { [key: string]: MenuItem[] } = {
     },
     {
       title: "Schedule Submission",
-      url: "/dashboard/deadline-reminder",
+      url: "/dashboard/schedule-submission",
       icon: ClipboardEdit,
       roles: ["admin", "personnel"],
     },
@@ -62,7 +61,13 @@ const menuItems: { [key: string]: MenuItem[] } = {
       title: "Grantees Management",
       url: "/dashboard/grantee-management",
       icon: IconUsers,
-      roles: ["admin", "personnel"],
+      roles: ["personnel"],
+    },
+    {
+      title: "Member of Parliament",
+      url: "/dashboard/mp-management",
+      icon: IconUsers,
+      roles: ["admin"],
     },
     {
       title: "Polls",
@@ -77,17 +82,23 @@ const menuItems: { [key: string]: MenuItem[] } = {
       roles: ["admin", "personnel"],
     },
     {
-      title: "Reports",
-      url: "/dashboard/reports",
-      icon: IconReport,
-      roles: ["personnel", "admin"],
-    },
-    {
       title: "Calendar Management",
       url: "/dashboard/calendar-management",
       icon: IconCalendar,
       roles: ["admin", "personnel"],
     },
+    {
+      title: "Deadlines",
+      url: "/dashboard/deadline-reminder",
+      icon: Clock,
+      roles: ["user"],
+    },
+    {
+      title: "Activity Logs",
+      url: "/dashboard/activity-logs",
+      icon: History,
+      roles: ["admin", "personnel"],
+    }
   ],
   
   // Personnel specific items
@@ -96,12 +107,6 @@ const menuItems: { [key: string]: MenuItem[] } = {
 
   // User specific items
   user: [
-    {
-      title: "Deadline Reminder",
-      url: "/dashboard/deadline-reminder",
-      icon: Clock,
-      roles: ["user"],
-    },
   ],
   
   // Documents section

@@ -28,6 +28,8 @@ export default function Page() {
   const [statusFilter, setStatusFilter] = useState("")
   const [typeFilter, setTypeFilter] = useState("")
   const [semesterFilter, setSemesterFilter] = useState("")
+  const [yearFilter, setYearFilter] = useState("")
+  const [batchFilter, setBatchFilter] = useState("")
   const [certificates, setCertificates] = useState<Certificate[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -67,9 +69,13 @@ export default function Page() {
       statusFilter={statusFilter}
       typeFilter={typeFilter}
       semesterFilter={semesterFilter}
+      yearFilter={yearFilter}
+      batchFilter={batchFilter}
       onStatusFilterChange={setStatusFilter}
       onTypeFilterChange={setTypeFilter}
       onSemesterFilterChange={setSemesterFilter}
+      onYearFilterChange={setYearFilter}
+      onBatchFilterChange={setBatchFilter}
       onSwitchToUpload={() => {}}
     />
   )

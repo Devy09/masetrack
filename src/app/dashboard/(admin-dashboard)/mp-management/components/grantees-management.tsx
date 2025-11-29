@@ -31,6 +31,7 @@ export default function StudentManagement() {
   const [error, setError] = useState<string | null>(null)
   const [active, setActive] = useState<Student | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [addedByFilter, setAddedByFilter] = useState("")
   const [batchFilter, setBatchFilter] = useState("")
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingStudent, setEditingStudent] = useState<Student | null>(null)
@@ -63,10 +64,22 @@ export default function StudentManagement() {
     fetchGrantees()
   }, [])
 
+  const addedByOptions = useMemo(() => {
+    const names = new Set<string>()
+    students.forEach((student) => {
+      if (student.addedBy?.name) {
+        names.add(student.addedBy.name)
+      }
+    })
+    return Array.from(names).sort((a, b) => a.localeCompare(b))
+  }, [students])
+
   const batchOptions = useMemo(() => {
     const batches = new Set<string>()
     students.forEach((student) => {
-      if (student.batch) batches.add(student.batch)
+      if (student.batch) {
+        batches.add(student.batch)
+      }
     })
     return Array.from(batches).sort((a, b) => a.localeCompare(b))
   }, [students])
@@ -77,9 +90,12 @@ export default function StudentManagement() {
       student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.batch.toLowerCase().includes(searchTerm.toLowerCase())
 
+    const matchesAddedBy =
+      addedByFilter === "" || student.addedBy?.name === addedByFilter
+
     const matchesBatch = batchFilter === "" || student.batch === batchFilter
 
-    return matchesSearch && matchesBatch
+    return matchesSearch && matchesAddedBy && matchesBatch
   })
 
   useEffect(() => {
@@ -247,35 +263,51 @@ export default function StudentManagement() {
 
   return (
     <div className="p-6">
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center">
-        <input
-          type="text"
-          placeholder="Search by name, email, or batch..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <select
-          value={batchFilter}
-          onChange={(e) => setBatchFilter(e.target.value)}
-          className="flex-1 md:flex-none md:w-60 px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">All Batches</option>
-          {batchOptions.map((batch) => (
-            <option key={batch} value={batch}>
-              {batch}
-            </option>
-          ))}
-        </select>
-        <button
-          onClick={() => {
-            setEditingStudent(null)
-            setIsFormOpen(true)
-          }}
-          className="w-full md:w-auto px-6 py-2 rounded-lg font-semibold bg-teal-500 hover:bg-teal-600 text-white transition-colors"
-        >
-          + Add Grantee
-        </button>
+      <div className="mb-6 flex flex-col gap-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <input
+            type="text"
+            placeholder="Search by name, email, or batch..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1 px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <select
+            value={addedByFilter}
+            onChange={(e) => setAddedByFilter(e.target.value)}
+            className="flex-1 md:flex-none md:w-60 px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Personnel</option>
+            {addedByOptions.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={batchFilter}
+            onChange={(e) => setBatchFilter(e.target.value)}
+            className="flex-1 md:flex-none md:w-60 px-4 py-2 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Batches</option>
+            {batchOptions.map((batch) => (
+              <option key={batch} value={batch}>
+                {batch}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex justify-end">
+          <button
+            onClick={() => {
+              setEditingStudent(null)
+              setIsFormOpen(true)
+            }}
+            className="px-6 py-2 rounded-lg font-semibold bg-teal-500 hover:bg-teal-600 text-white transition-colors"
+          >
+            + Add Grantee
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>

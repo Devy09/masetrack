@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { cookies } from 'next/headers';
+import { logActivity, ActivityActions, EntityTypes } from '@/lib/activity-log';
 
 // GET all grantees from Grantee table
 export async function GET(request: NextRequest) {
@@ -139,6 +140,21 @@ export async function POST(request: Request) {
       },
     });
 
+    // Log activity
+    await logActivity({
+      action: ActivityActions.GRANTEE_ADDED,
+      entityType: EntityTypes.GRANTEE,
+      entityId: newGrantee.id,
+      description: `${currentUser.name} added ${existingUser.name} as a grantee (Batch: ${newGrantee.batch})`,
+      userId: Number(currentUser.id),
+      metadata: {
+        granteeName: existingUser.name,
+        granteeEmail: existingUser.email,
+        batch: newGrantee.batch,
+        status: newGrantee.status,
+      },
+    });
+
     return NextResponse.json(newGrantee);
   } catch (error) {
     console.error('Error adding grantee:', error);
@@ -184,6 +200,14 @@ export async function PATCH(request: Request) {
     if (address !== undefined) updateData.address = address;
     if (status !== undefined) updateData.status = status;
 
+    // Get current user for logging
+    const cookieStore = await cookies()
+    const session = cookieStore.get('auth-session')
+    if (!session?.value) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    }
+    const currentUser = JSON.parse(session.value)
+
     // Update grantee
     const updatedGrantee = await prisma.grantee.update({
       where: { id: Number(id) },
@@ -200,6 +224,30 @@ export async function PATCH(request: Request) {
         addedBy: { select: { id: true, name: true, email: true } },
         createdAt: true,
         updatedAt: true,
+      },
+    });
+
+    // Log activity
+    const changes = []
+    if (batch !== undefined) changes.push(`batch to ${batch}`)
+    if (phoneNumber !== undefined) changes.push(`phone number`)
+    if (address !== undefined) changes.push(`address`)
+    if (status !== undefined) changes.push(`status to ${status}`)
+
+    await logActivity({
+      action: ActivityActions.GRANTEE_UPDATED,
+      entityType: EntityTypes.GRANTEE,
+      entityId: updatedGrantee.id,
+      description: `${currentUser.name} updated grantee ${updatedGrantee.name} (${changes.join(', ')})`,
+      userId: Number(currentUser.id),
+      metadata: {
+        granteeName: updatedGrantee.name,
+        changes: {
+          batch: batch !== undefined ? batch : undefined,
+          phoneNumber: phoneNumber !== undefined,
+          address: address !== undefined,
+          status: status !== undefined ? status : undefined,
+        },
       },
     });
 
@@ -236,9 +284,31 @@ export async function DELETE(request: Request) {
       );
     }
 
+    // Get current user for logging
+    const cookieStore = await cookies()
+    const session = cookieStore.get('auth-session')
+    if (!session?.value) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    }
+    const currentUser = JSON.parse(session.value)
+
     // Delete grantee record
     await prisma.grantee.delete({
       where: { id: Number(id) },
+    });
+
+    // Log activity
+    await logActivity({
+      action: ActivityActions.GRANTEE_DELETED,
+      entityType: EntityTypes.GRANTEE,
+      entityId: Number(id),
+      description: `${currentUser.name} removed ${existingGrantee.name} from grantees`,
+      userId: Number(currentUser.id),
+      metadata: {
+        granteeName: existingGrantee.name,
+        granteeEmail: existingGrantee.email,
+        batch: existingGrantee.batch,
+      },
     });
 
     return NextResponse.json({ success: true });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import prisma from '@/lib/prisma'
+import { logActivity, ActivityActions, EntityTypes } from '@/lib/activity-log'
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,7 +67,21 @@ export async function POST(request: NextRequest) {
           }))
         }
       },
-      include: { files: true }
+      include: { files: true, user: { select: { name: true } } }
+    })
+
+    // Log activity
+    await logActivity({
+      action: ActivityActions.CERTIFICATE_SUBMITTED,
+      entityType: EntityTypes.CERTIFICATE_SUBMISSION,
+      entityId: submission.id,
+      description: `${user.name} submitted a ${title} for ${semester} semester with ${submission.files.length} file(s)`,
+      userId: Number(user.id),
+      metadata: {
+        title,
+        semester,
+        fileCount: submission.files.length,
+      },
     })
 
     return NextResponse.json({

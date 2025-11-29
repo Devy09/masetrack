@@ -45,26 +45,23 @@ export default function DeadlineReminder() {
     priority: "medium" as "low" | "medium" | "high",
   })
 
-  // Load deadlines from localStorage on mount
+  // Load deadlines from API on mount
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("deadlines")
-      if (saved) {
-        setDeadlines(JSON.parse(saved))
+    const fetchDeadlines = async () => {
+      try {
+        const response = await fetch("/api/deadlines")
+        if (!response.ok) {
+          throw new Error("Failed to fetch deadlines")
+        }
+        const data = await response.json()
+        setDeadlines(data)
+      } catch (error) {
+        console.error("Failed to load deadlines:", error)
+        toast.error("Failed to load deadlines")
       }
-    } catch (error) {
-      console.error("Failed to load deadlines from localStorage:", error)
     }
+    fetchDeadlines()
   }, [])
-
-  // Save deadlines to localStorage whenever deadlines change
-  useEffect(() => {
-    try {
-      localStorage.setItem("deadlines", JSON.stringify(deadlines))
-    } catch (error) {
-      console.error("Failed to save deadlines to localStorage:", error)
-    }
-  }, [deadlines])
 
   const resetForm = () => {
     setFormData({
@@ -76,7 +73,7 @@ export default function DeadlineReminder() {
     setEditingDeadline(null)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!formData.title || !formData.dueDate) {
@@ -84,26 +81,51 @@ export default function DeadlineReminder() {
       return
     }
 
-    if (editingDeadline) {
-      // Update existing deadline
-      setDeadlines((prev) =>
-        prev.map((deadline) => (deadline.id === editingDeadline.id ? { ...deadline, ...formData } : deadline)),
-      )
-      toast.success("Deadline updated successfully!")
-    } else {
-      // Create new deadline
-      const newDeadline: Deadline = {
-        id: Date.now().toString(),
-        ...formData,
-        status: "pending",
-        createdAt: new Date().toISOString(),
-      }
-      setDeadlines((prev) => [...prev, newDeadline])
-      toast.success("Deadline created successfully!")
-    }
+    try {
+      if (editingDeadline) {
+        // Update existing deadline
+        const response = await fetch(`/api/deadlines/${editingDeadline.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        })
 
-    resetForm()
-    setIsDialogOpen(false)
+        if (!response.ok) {
+          throw new Error("Failed to update deadline")
+        }
+
+        const updatedDeadline = await response.json()
+        setDeadlines((prev) =>
+          prev.map((deadline) => (deadline.id === editingDeadline.id ? updatedDeadline : deadline)),
+        )
+        toast.success("Deadline updated successfully!")
+      } else {
+        // Create new deadline
+        const response = await fetch("/api/deadlines", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to create deadline")
+        }
+
+        const newDeadline = await response.json()
+        setDeadlines((prev) => [...prev, newDeadline])
+        toast.success("Deadline created successfully!")
+      }
+
+      resetForm()
+      setIsDialogOpen(false)
+    } catch (error) {
+      console.error("Error saving deadline:", error)
+      toast.error("Failed to save deadline. Please try again.")
+    }
   }
 
   const handleEdit = (deadline: Deadline) => {
@@ -117,22 +139,52 @@ export default function DeadlineReminder() {
     setIsDialogOpen(true)
   }
 
-  const handleDelete = (id: string) => {
-    setDeadlines((prev) => prev.filter((deadline) => deadline.id !== id))
-    toast.success("Deadline removed successfully.")
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/deadlines/${id}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to delete deadline")
+      }
+
+      setDeadlines((prev) => prev.filter((deadline) => deadline.id !== id))
+      toast.success("Deadline removed successfully.")
+    } catch (error) {
+      console.error("Error deleting deadline:", error)
+      toast.error("Failed to delete deadline. Please try again.")
+    }
   }
 
-  const toggleStatus = (id: string) => {
-    setDeadlines((prev) =>
-      prev.map((deadline) => {
-        if (deadline.id === id) {
-          const newStatus = deadline.status === "pending" ? "completed" : "pending"
-          toast.success(`Deadline marked as ${newStatus}!`)
-          return { ...deadline, status: newStatus }
-        }
-        return deadline
-      }),
-    )
+  const toggleStatus = async (id: string) => {
+    try {
+      const deadline = deadlines.find((d) => d.id === id)
+      if (!deadline) return
+
+      const newStatus = deadline.status === "pending" ? "completed" : "pending"
+
+      const response = await fetch(`/api/deadlines/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: newStatus }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update deadline status")
+      }
+
+      const updatedDeadline = await response.json()
+      setDeadlines((prev) =>
+        prev.map((d) => (d.id === id ? updatedDeadline : d)),
+      )
+      toast.success(`Deadline marked as ${newStatus}!`)
+    } catch (error) {
+      console.error("Error updating deadline status:", error)
+      toast.error("Failed to update deadline status. Please try again.")
+    }
   }
 
   const getDaysUntilDue = (dueDate: string) => {
@@ -181,48 +233,56 @@ export default function DeadlineReminder() {
             Stay on top of your important deadlines and never miss a due date.
           </p>
         </div>
-
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        {/* <Dialog
+          open={isDialogOpen}
+          onOpenChange={(open) => {
+            setIsDialogOpen(open)
+            if (!open) {
+              resetForm()
+            }
+          }}
+        >
           <DialogTrigger asChild>
-            <Button onClick={resetForm} className="gap-2">
+            <Button
+              className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white"
+              onClick={() => setEditingDeadline(null)}
+            >
               <Plus className="h-4 w-4" />
-              Add Deadline
+              Schedule Deadline
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>{editingDeadline ? "Edit Deadline" : "Create New Deadline"}</DialogTitle>
+              <DialogTitle>{editingDeadline ? "Edit Deadline" : "Schedule Deadline"}</DialogTitle>
               <DialogDescription>
                 {editingDeadline
-                  ? "Update your deadline details below."
-                  : "Add a new deadline to keep track of important due dates."}
+                  ? "Update the details of your existing deadline."
+                  : "Add a new deadline to stay on track."}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Title *</Label>
+                <Label htmlFor="title">Title</Label>
                 <Input
                   id="title"
                   value={formData.title}
                   onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                  placeholder="Enter deadline title"
+                  placeholder="e.g. Submit enrollment documents"
                   required
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                  placeholder="Add any additional details..."
-                  rows={3}
+                  placeholder="Add any extra details that will help you remember."
+                  rows={4}
                 />
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="dueDate">Due Date *</Label>
+                <Label htmlFor="dueDate">Due date & time</Label>
                 <Input
                   id="dueDate"
                   type="datetime-local"
@@ -231,7 +291,6 @@ export default function DeadlineReminder() {
                   required
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="priority">Priority</Label>
                 <Select
@@ -240,7 +299,7 @@ export default function DeadlineReminder() {
                     setFormData((prev) => ({ ...prev, priority: value }))
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="priority">
                     <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
                   <SelectContent>
@@ -250,21 +309,29 @@ export default function DeadlineReminder() {
                   </SelectContent>
                 </Select>
               </div>
-
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+              <DialogFooter className="flex justify-between gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    resetForm()
+                    setIsDialogOpen(false)
+                  }}
+                >
                   Cancel
                 </Button>
-                <Button type="submit">{editingDeadline ? "Update" : "Create"} Deadline</Button>
+                <Button type="submit" className="bg-teal-500 hover:bg-teal-600 text-white">
+                  {editingDeadline ? "Update Deadline" : "Create Deadline"}
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
-        </Dialog>
+        </Dialog> */}
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg">
+        <Card className="bg-gradient-to-tr from-teal-100 to-teal-400">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Deadlines</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -274,7 +341,7 @@ export default function DeadlineReminder() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-to-tr from-teal-100 to-teal-400">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
@@ -284,7 +351,7 @@ export default function DeadlineReminder() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-to-tr from-teal-100 to-teal-400">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Completed</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
@@ -294,7 +361,7 @@ export default function DeadlineReminder() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-to-tr from-teal-100 to-teal-400">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Overdue</CardTitle>
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
@@ -314,13 +381,6 @@ export default function DeadlineReminder() {
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No deadlines yet</h3>
-              <p className="text-muted-foreground text-center mb-4">
-                Create your first deadline to start tracking important due dates.
-              </p>
-              <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
-                <Plus className="h-4 w-4" />
-                Add Your First Deadline
-              </Button>
             </CardContent>
           </Card>
         ) : (

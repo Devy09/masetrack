@@ -1,10 +1,10 @@
 import React from 'react'
-import MPManagement from './components/mp-management'
+import GranteesManagement from './components/grantees-management'
 
-function MPs() {
+function Grantees() {
   return (
-    <MPManagement />
+    <GranteesManagement />
   )
 }
 
-export default MPs
+export default Grantees

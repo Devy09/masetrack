@@ -37,9 +37,13 @@ interface DashboardSubmissionsProps {
   statusFilter: string
   typeFilter: string
   semesterFilter: string
+  yearFilter: string
+  batchFilter: string
   onStatusFilterChange: (value: string) => void
   onTypeFilterChange: (value: string) => void
   onSemesterFilterChange: (value: string) => void
+  onYearFilterChange: (value: string) => void
+  onBatchFilterChange: (value: string) => void
   onSwitchToUpload: () => void
 }
 
@@ -48,9 +52,13 @@ export function DashboardSubmissions({
   statusFilter,
   typeFilter,
   semesterFilter,
+  yearFilter,
+  batchFilter,
   onStatusFilterChange,
   onTypeFilterChange,
   onSemesterFilterChange,
+  onYearFilterChange,
+  onBatchFilterChange,
   onSwitchToUpload,
 }: DashboardSubmissionsProps) {
   const { user } = useAuth()
@@ -61,11 +69,36 @@ export function DashboardSubmissions({
   const [remarkText, setRemarkText] = React.useState("")
   const [mpFilter, setMpFilter] = React.useState<string>("")
 
+  const yearOptions = React.useMemo(() => {
+    const years = new Set<string>()
+    certificates.forEach((cert) => {
+      const year = new Date(cert.submittedDate).getFullYear()
+      if (!Number.isNaN(year)) {
+        years.add(String(year))
+      }
+    })
+    return Array.from(years).sort((a, b) => Number(b) - Number(a))
+  }, [certificates])
+
+  const batchOptions = React.useMemo(() => {
+    const batches = new Set<string>()
+    certificates.forEach((cert) => {
+      if (cert.batch) {
+        batches.add(cert.batch)
+      }
+    })
+    return Array.from(batches).sort()
+  }, [certificates])
+
   const filteredCertificates = certificates.filter((cert) => {
+    const certYear = new Date(cert.submittedDate).getFullYear()
+    const matchesYear = yearFilter === "" || (!Number.isNaN(certYear) && String(certYear) === yearFilter)
     return (
       (statusFilter === "" || cert.status === statusFilter) &&
       (typeFilter === "" || cert.type === typeFilter) &&
       (semesterFilter === "" || cert.semester === semesterFilter) &&
+      matchesYear &&
+      (batchFilter === "" || cert.batch === batchFilter) &&
       (mpFilter === "" || (cert.mpTags || []).includes(mpFilter))
     )
   })
@@ -193,7 +226,7 @@ export function DashboardSubmissions({
         <CardDescription>View all your certificate submissions and their current status</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
           <Input
             type="text"
             placeholder="Search certificates..."
@@ -226,6 +259,30 @@ export function DashboardSubmissions({
             <option value="">All Semesters</option>
             <option value="first">1st Semester</option>
             <option value="second">2nd Semester</option>
+          </select>
+          <select
+            value={yearFilter}
+            onChange={(e) => onYearFilterChange(e.target.value)}
+            className="px-3 py-2 border border-border rounded-md bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full"
+          >
+            <option value="">All Years</option>
+            {yearOptions.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
+          <select
+            value={batchFilter}
+            onChange={(e) => onBatchFilterChange(e.target.value)}
+            className="px-3 py-2 border border-border rounded-md bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring w-full"
+          >
+            <option value="">All Batches</option>
+            {batchOptions.map((batch) => (
+              <option key={batch} value={batch}>
+                {batch}
+              </option>
+            ))}
           </select>
         </div>
 

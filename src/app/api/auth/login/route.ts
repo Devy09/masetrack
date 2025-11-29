@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import prisma from '@/lib/prisma'
+import { logActivity, ActivityActions } from '@/lib/activity-log'
 
 export async function POST(req: Request) {
   const { email, password } = await req.json()
@@ -61,6 +62,21 @@ export async function POST(req: Request) {
       maxAge: 60 * 60 * 24 * 7, // 1 week
       path: '/',
       domain: process.env.NODE_ENV === 'production' ? undefined : undefined, // Let Vercel handle domain
+    })
+
+    // Log login activity (don't await to avoid blocking the response)
+    logActivity({
+      action: ActivityActions.USER_LOGIN,
+      entityType: null,
+      entityId: null,
+      description: `${user.name} (${user.email}) logged in`,
+      userId: user.id,
+      metadata: {
+        role: user.role,
+        email: user.email,
+      },
+    }).catch((error) => {
+      console.error('Failed to log login activity:', error)
     })
 
     return response

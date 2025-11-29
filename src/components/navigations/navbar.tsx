@@ -50,31 +50,6 @@ const NavBar = () => {
           </span>
         </Link>
 
-        {/* Navigation - Hidden on mobile, visible on tablet and desktop */}
-        <nav className="hidden sm:flex items-center">
-          <AnimatedBackground
-            defaultValue={TABS[0].name}
-            className="rounded-lg bg-teal-100 dark:bg-teal-800/50"
-            transition={{
-              type: "spring",
-              bounce: 0.2,
-              duration: 0.3,
-            }}
-            enableHover
-          >
-            {TABS.map((tab) => (
-              <Link
-                key={tab.name}
-                data-id={tab.name}
-                href={tab.href}
-                className="px-3 py-2 text-sm font-medium text-teal-700 transition-colors duration-200 hover:text-teal-800 dark:text-teal-300 dark:hover:text-teal-100 relative z-10 sm:px-3 md:px-4"
-              >
-                {tab.name}
-              </Link>
-            ))}
-          </AnimatedBackground>
-        </nav>
-
         {/* Right side buttons */}
         <div className="flex items-center space-x-2">
           <DropdownMenu>

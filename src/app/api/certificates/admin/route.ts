@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import prisma from '@/lib/prisma'
 import { sendCertificateApprovalEmail, sendCertificateRejectionEmail } from '@/lib/email'
+import { logActivity, ActivityActions, EntityTypes } from '@/lib/activity-log'
 
 // GET all certificates for admin review
 export async function GET(request: NextRequest) {
@@ -145,7 +146,7 @@ export async function PATCH(request: NextRequest) {
 
     // Optionally create a remark if provided and status was changed
     if (remark && typeof remark === 'string' && remark.trim().length > 0) {
-      await prisma.certificateRemark.create({
+      const createdRemark = await prisma.certificateRemark.create({
         data: {
           submissionId: certificateId,
           authorId: Number(user.id),
@@ -153,19 +154,54 @@ export async function PATCH(request: NextRequest) {
           content: remark.trim()
         }
       })
+
+      // Log remark activity
+      await logActivity({
+        action: ActivityActions.CERTIFICATE_REMARK_ADDED,
+        entityType: EntityTypes.CERTIFICATE_SUBMISSION,
+        entityId: certificateId,
+        description: `${user.name} added a remark to certificate submission #${certificateId}`,
+        userId: Number(user.id),
+        metadata: {
+          remarkId: createdRemark.id,
+          hasRemark: true,
+        },
+      })
     }
 
-    // Send email notification if status was changed to approved or rejected
+    // Log activity for status changes
     if (status === 'approved' || status === 'rejected') {
+      const mapTitle = (t: string) => (t === 'ENROLLMENT' ? 'Certificate of Enrollment' : 'Certificate of Grades')
+      const mapSemester = (s: string) => {
+        if (s === 'FIRST') return 'First Semester'
+        if (s === 'SECOND') return 'Second Semester'
+        return 'First Semester'
+      }
+
+      const action = status === 'approved' 
+        ? ActivityActions.CERTIFICATE_APPROVED 
+        : ActivityActions.CERTIFICATE_REJECTED
+      
+      const actionText = status === 'approved' ? 'approved' : 'rejected'
+      
+      await logActivity({
+        action,
+        entityType: EntityTypes.CERTIFICATE_SUBMISSION,
+        entityId: certificateId,
+        description: `${user.name} ${actionText} certificate submission #${certificateId} (${mapTitle(certificate.title as unknown as string)} - ${mapSemester(certificate.semester as unknown as string)}) for ${certificate.user.name}`,
+        userId: Number(user.id),
+        metadata: {
+          status,
+          certificateTitle: mapTitle(certificate.title as unknown as string),
+          semester: mapSemester(certificate.semester as unknown as string),
+          granteeName: certificate.user.name,
+          granteeEmail: certificate.user.email,
+        },
+      })
+
+      // Send email notification
       console.log('Status changed to:', status, '- attempting to send email')
       try {
-        const mapTitle = (t: string) => (t === 'ENROLLMENT' ? 'Certificate of Enrollment' : 'Certificate of Grades')
-        const mapSemester = (s: string) => {
-          if (s === 'FIRST') return 'First Semester'
-          if (s === 'SECOND') return 'Second Semester'
-          return 'First Semester' // default fallback
-        }
-
         const emailData = {
           userName: certificate.user.name,
           userEmail: certificate.user.email,
@@ -198,6 +234,18 @@ export async function PATCH(request: NextRequest) {
         console.error('Error sending email notification:', emailError)
         // Don't fail the entire request if email fails
       }
+    } else if (status !== undefined) {
+      // Log other status updates
+      await logActivity({
+        action: ActivityActions.CERTIFICATE_UPDATED,
+        entityType: EntityTypes.CERTIFICATE_SUBMISSION,
+        entityId: certificateId,
+        description: `${user.name} updated certificate submission #${certificateId} status to ${status}`,
+        userId: Number(user.id),
+        metadata: {
+          status,
+        },
+      })
     }
     
     return NextResponse.json({
