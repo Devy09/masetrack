@@ -98,7 +98,13 @@ const menuItems: { [key: string]: MenuItem[] } = {
       url: "/dashboard/activity-logs",
       icon: History,
       roles: ["admin", "personnel"],
-    }
+    },
+    {
+      title: "Calendar of Activities",
+      url: "/dashboard/user-calendar",
+      icon: IconCalendar,
+      roles: ["user"],
+    },
   ],
   
   // Personnel specific items

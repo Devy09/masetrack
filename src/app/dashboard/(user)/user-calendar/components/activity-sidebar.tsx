@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Plus, Calendar, CheckCircle2, Users } from "lucide-react"
-import type { Activity } from "../page"
+import type { Activity } from "@/app/dashboard/(admin-dashboard)/calendar-management/page"
 
 interface ActivitySidebarProps {
   activeFilters: string[]
@@ -67,12 +67,12 @@ export function ActivitySidebar({
 
   return (
     <div className="space-y-4">
-      <Card className="p-4 backdrop-blur-md bg-white/70 dark:bg-gray-900/70 border-white/20 shadow-xl">
+      {/* <Card className="p-4 backdrop-blur-md bg-white/70 dark:bg-gray-900/70 border-white/20 shadow-xl">
         <Button className="w-full gap-2" onClick={onNewActivityClick}>
           <Plus className="h-4 w-4" />
           New Activity
         </Button>
-      </Card>
+      </Card> */}
 
       <Card className="p-4 backdrop-blur-md bg-white/70 dark:bg-gray-900/70 border-white/20 shadow-xl">
         <h3 className="mb-4 font-semibold text-foreground">Categories</h3>
